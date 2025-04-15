@@ -25,11 +25,11 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
         self.model = nn.Sequential(
             nn.Flatten(),                    # 展平成 1D 向量
-            nn.Linear(28*28, 128),
+            nn.Linear(28*28, 128),           # transforms.ToTensor(): 把圖片從 [0~255] 的 PIL Image 轉成 PyTorch tensor，並壓到 [0.0 ~ 1.0]。
             nn.ReLU(),
-            nn.Linear(128, 64),
+            nn.Linear(128, 64),              # 每層layer都少一半
             nn.ReLU(),
-            nn.Linear(64, 10)                # 輸出10類別
+            nn.Linear(64, 10)                # 輸出10類別 (0 ~ 9)
         )
         
     def forward(self, x):
@@ -55,7 +55,7 @@ for epoch in range(epochs):
     
     print(f"Epoch {epoch+1}, Loss: {running_loss/len(train_loader):.4f}")
 
-# 計算正確率
+# 計算正確率(Validation)
 correct = 0
 total = 0
 with torch.no_grad():
