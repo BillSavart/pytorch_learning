@@ -77,6 +77,7 @@ class COVID19Dataset(Dataset):
             feats = list(range(93))
         else:
             # TODO: Using 40 states & 2 tested_positive features (indices = 57 & 75)
+            #feats = [75, 57, 42, 60, 78, 43, 61, 79, 40, 58, 76, 41, 59, 77]
             pass
 
         if mode == 'test':
@@ -156,14 +157,16 @@ class NeuralNet(nn.Module):
 
     def cal_loss(self, pred, target):
         ''' Calculate loss '''
+        # TODO: you may implement L1/L2 regularization here
         mse = self.criterion(pred, target)
+
         # 只對線性層的 weight 做 L1（不包含 bias, BatchNorm 等）
         l1_norm = 0.
         for name, param in self.named_parameters():
             if 'weight' in name:
                 l1_norm += param.abs().sum()
         return mse + self.l1_lambda * l1_norm
-        # TODO: you may implement L1/L2 regularization here
+        
         # return self.criterion(pred, target)
     
 def train(tr_set, dv_set, model, config, device):
@@ -249,7 +252,7 @@ config = {
     'batch_size': 270,               # mini-batch size for dataloader
     'optimizer': 'Adam',              # optimization algorithm (optimizer in torch.optim)
     'optim_hparas': {                # hyper-parameters for the optimizer (depends on which optimizer you are using)
-        'lr': 0.001                 # learning rate of SGD
+        #'lr': 0.001                 # learning rate of SGD
         #'momentum': 0.9              # momentum for SGD
     },
     'early_stop': 200,               # early stopping epochs (the number epochs since your model's last improvement)
