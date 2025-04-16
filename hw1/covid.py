@@ -134,13 +134,15 @@ def prep_dataloader(path, mode, batch_size, n_jobs=0, target_only=False):
 
 class NeuralNet(nn.Module):
     ''' A simple fully-connected deep neural network '''
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, l1_lambda=1e-5):
         super(NeuralNet, self).__init__()
+        self.l1_lambda = l1_lambda
 
         # Define your neural network here
         # TODO: How to modify this model to achieve better performance?
         self.net = nn.Sequential(
             nn.Linear(input_dim, 64),
+            nn.BatchNorm1d(64),
             nn.ReLU(),
             nn.Linear(64, 1)
         )
@@ -154,8 +156,15 @@ class NeuralNet(nn.Module):
 
     def cal_loss(self, pred, target):
         ''' Calculate loss '''
+        mse = self.criterion(pred, target)
+        # 只對線性層的 weight 做 L1（不包含 bias, BatchNorm 等）
+        l1_norm = 0.
+        for name, param in self.named_parameters():
+            if 'weight' in name:
+                l1_norm += param.abs().sum()
+        return mse + self.l1_lambda * l1_norm
         # TODO: you may implement L1/L2 regularization here
-        return self.criterion(pred, target)
+        # return self.criterion(pred, target)
     
 def train(tr_set, dv_set, model, config, device):
     ''' DNN training '''
@@ -163,8 +172,12 @@ def train(tr_set, dv_set, model, config, device):
     n_epochs = config['n_epochs']  # Maximum number of epochs
 
     # Setup optimizer
-    optimizer = getattr(torch.optim, config['optimizer'])(
-        model.parameters(), **config['optim_hparas'])
+    #optimizer = getattr(torch.optim, config['optimizer'])(
+    #   model.parameters(), **config['optim_hparas'])
+
+    optimizer = optim.Adam(model.parameters(),
+                       lr=5e-4,
+                       weight_decay=1e-4)
 
     min_mse = 1000.
     loss_record = {'train': [], 'dev': []}      # for recording training loss
@@ -234,13 +247,13 @@ target_only = False                   # TODO: Using 40 states & 2 tested_positiv
 config = {
     'n_epochs': 3000,                # maximum number of epochs
     'batch_size': 270,               # mini-batch size for dataloader
-    'optimizer': 'SGD',              # optimization algorithm (optimizer in torch.optim)
+    'optimizer': 'Adam',              # optimization algorithm (optimizer in torch.optim)
     'optim_hparas': {                # hyper-parameters for the optimizer (depends on which optimizer you are using)
-        'lr': 0.001,                 # learning rate of SGD
-        'momentum': 0.9              # momentum for SGD
+        'lr': 0.001                 # learning rate of SGD
+        #'momentum': 0.9              # momentum for SGD
     },
     'early_stop': 200,               # early stopping epochs (the number epochs since your model's last improvement)
-    'save_path': 'models/model.pth'  # your model will be saved here
+    'save_path': 'models/model.pth',  # your model will be saved here
 }
 
 tr_path = './covid.train.csv'
@@ -250,7 +263,7 @@ tr_set = prep_dataloader(tr_path, 'train', config['batch_size'], target_only=tar
 dv_set = prep_dataloader(tr_path, 'dev', config['batch_size'], target_only=target_only)
 tt_set = prep_dataloader(tt_path, 'test', config['batch_size'], target_only=target_only)
 
-model = NeuralNet(tr_set.dataset.dim).to(device)  # Construct model and move to device
+model = NeuralNet(tr_set.dataset.dim, l1_lambda=1e-5).to(device)  # Construct model and move to device
 
 model_loss, model_loss_record = train(tr_set, dv_set, model, config, device)
 
