@@ -1,5 +1,3 @@
 train/
 val/
-test_11.npy
-train_11.npy
-train_label_11.npy
+timit_11/
