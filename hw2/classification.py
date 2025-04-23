@@ -43,8 +43,6 @@ print('Size of validation set: {}'.format(val_x.shape))
 
 BATCH_SIZE = 64
 
-from torch.utils.data import DataLoader
-
 train_set = TIMITDataset(train_x, train_y)
 val_set = TIMITDataset(val_x, val_y)
 train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True) #only shuffle the training data
