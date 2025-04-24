@@ -33,7 +33,8 @@ def plot_learning_curve(loss_record, title=''):
     plt.ylabel('MSE loss')
     plt.title('Learning curve of {}'.format(title))
     plt.legend()
-    plt.show()
+    #plt.show()
+    plt.savefig('learning_curve.png')
 
 
 def plot_pred(dv_set, model, device, lim=35., preds=None, targets=None):
@@ -58,7 +59,8 @@ def plot_pred(dv_set, model, device, lim=35., preds=None, targets=None):
     plt.xlabel('ground truth value')
     plt.ylabel('predicted value')
     plt.title('Ground Truth v.s. Prediction')
-    plt.show()
+    #plt.show()
+    plt.savefig('pred.png')
 
 class COVID19Dataset(Dataset):
     ''' Dataset for loading and preprocessing the COVID19 dataset '''
